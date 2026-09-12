@@ -1,0 +1,47 @@
+.outline-btn svg,
+.gold-btn svg,
+.dark-btn svg {
+  margin-left: 9px;
+  font-size: 10px;
+}
+
+.feature strong svg,
+.amenity-list strong svg {
+  width: 1em;
+}
+
+.specs span svg {
+  height: 18px;
+}
+
+.map-card {
+  background: #e8e4da;
+}
+
+.map-card iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 205px;
+  border: 0;
+  filter: saturate(.72) contrast(.96);
+}
+
+.landmarks li span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landmarks li span svg {
+  width: 12px;
+  color: var(--gold);
+}
+
+.landmarks li span::before {
+  display: none;
+}
+
+.socials a svg {
+  height: 11px;
+}
