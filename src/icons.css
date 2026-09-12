@@ -45,3 +45,59 @@
 .socials a svg {
   height: 11px;
 }
+
+/* Keep the hero focused exclusively on the exterior building quadrant. */
+.hero {
+  isolation: isolate;
+  background: linear-gradient(90deg, #022b2f 0%, #05393c 52%, #042d30 100%);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: 88px 0 0 auto;
+  width: 68%;
+  background-image: url('/images/property-atlas.png');
+  background-position: 0 0;
+  background-size: 200% 200%;
+  background-repeat: no-repeat;
+  filter: saturate(1.12) contrast(1.12) brightness(1.06);
+  transform: scale(1.035);
+  transform-origin: right bottom;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(2, 34, 38, .99) 0%, rgba(2, 34, 38, .92) 30%, rgba(2, 34, 38, .34) 56%, transparent 78%),
+    radial-gradient(circle at 73% 46%, rgba(224, 188, 108, .22), transparent 34%),
+    linear-gradient(0deg, rgba(2, 34, 38, .7) 0%, transparent 30%);
+  pointer-events: none;
+}
+
+.hero-copy,
+.hero-note,
+.feature-row {
+  z-index: 1;
+}
+
+.hero-copy {
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .hero::before {
+    inset: 75px 0 0;
+    width: 100%;
+    opacity: .66;
+    transform: scale(1.05);
+  }
+
+  .hero::after {
+    background: linear-gradient(90deg, rgba(2, 34, 38, .95), rgba(2, 34, 38, .56));
+  }
+}
