@@ -1,16 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
   faArrowRight, faBars, faXmark, faBolt, faDroplet, faBuilding,
   faStore, faBoxesStacked, faBed, faBath, faCouch, faDoorOpen,
   faShieldHalved, faElevator, faPaintRoller, faLocationDot,
-  faCartShopping, faGraduationCap, faHospital, faMosque, faBus
+  faCartShopping, faGraduationCap, faHospital, faMosque, faBus,
+  faCheck, faWarehouse, faRulerCombined
 } from '@fortawesome/free-solid-svg-icons'
 import { faInstagram, faFacebookF, faLinkedinIn } from '@fortawesome/free-brands-svg-icons'
 
 const menuOpen = ref(false)
-const nav = ['Home', 'About', 'Apartments', 'Shops', 'Amenities', 'Location', 'Gallery', 'Contact']
+const nav = ['Home', 'Apartments', 'Shops', 'Availability', 'Amenities', 'Location', 'Contact']
 const features = [
   [faBolt, 'Silent generator', 'Inside building'],
   [faDroplet, 'Borehole water', 'Prepaid meter'],
@@ -24,6 +25,25 @@ const amenities = [
 ]
 const apartmentSpecs = [[faBed, '2 Bedrooms'], [faBath, '2 Bathrooms'], [faCouch, 'Unfurnished'], [faDoorOpen, 'Balcony']]
 const landmarks = [[faCartShopping, 'Shopping Centre', '3 mins'], [faGraduationCap, 'Eastleigh High School', '5 mins'], [faHospital, 'Aga Khan Hospital', '7 mins'], [faMosque, 'Jamia Mosque', '5 mins'], [faBus, 'Eastleigh Bus Station', '5 mins']]
+
+const selectedFloor = ref('1F')
+const selectedUnits = ref([])
+const floorOptions = [
+  { id: 'B', label: 'B', name: 'Basement' }, { id: 'G', label: 'G', name: 'Ground Floor' },
+  ...Array.from({ length: 13 }, (_, i) => ({ id: `${i + 1}F`, label: `${i + 1}F`, name: `Floor ${i + 1}` }))
+]
+const inventory = computed(() => {
+  if (selectedFloor.value === 'B') return Array.from({ length: 12 }, (_, i) => ({ code: `S${String(i + 1).padStart(2, '0')}`, type: 'Storage Unit', detail: i < 6 ? 'Near Service Lift' : 'Secure Lower Level', size: 'Flexible size', available: i !== 3 }))
+  if (selectedFloor.value === 'G') return Array.from({ length: 12 }, (_, i) => ({ code: `G${String(i + 1).padStart(2, '0')}`, type: 'Commercial Shop', detail: i < 6 ? 'Front-facing Shop' : 'Rear-facing Shop', size: 'Modular retail space', available: ![2, 9].includes(i) }))
+  const floor = Number(selectedFloor.value.replace('F', ''))
+  return Array.from({ length: 10 }, (_, i) => ({ code: `${floor}${String(i + 1).padStart(2, '0')}`, type: '2-Bedroom Apartment', detail: i < 4 ? 'Street View' : i < 8 ? 'Courtyard View' : 'Near Lift Lobby', size: '2 bed · 2 bath', available: !(floor === 1 && i === 4) }))
+})
+const currentFloor = computed(() => floorOptions.find(f => f.id === selectedFloor.value))
+const availableUnits = computed(() => inventory.value.filter(unit => unit.available))
+function toggleUnit(unit) { if (unit.available) selectedUnits.value = selectedUnits.value.includes(unit.code) ? selectedUnits.value.filter(code => code !== unit.code) : [...selectedUnits.value, unit.code] }
+function selectAll() { selectedUnits.value = [...selectedUnits.value.filter(code => !inventory.value.some(unit => unit.code === code)), ...availableUnits.value.map(unit => unit.code)] }
+function clearFloor() { selectedUnits.value = selectedUnits.value.filter(code => !inventory.value.some(unit => unit.code === code)) }
+const enquirySubject = computed(() => encodeURIComponent(`Eastleigh Heights enquiry: ${selectedUnits.value.join(', ') || 'Available spaces'}`))
 </script>
 
 <template>
@@ -89,6 +109,36 @@ const landmarks = [[faCartShopping, 'Shopping Centre', '3 mins'], [faGraduationC
         <a class="dark-btn" href="#contact">Enquire about storage <FontAwesomeIcon :icon="faArrowRight" /></a>
       </article>
       <div class="storage-visual"><div class="door one"></div><div class="aisle"><span>Secure. Accessible. Practical.</span></div><div class="door two"></div></div>
+    </section>
+
+    <section id="availability" class="availability">
+      <div class="availability-head">
+        <div><p class="kicker">Live availability</p><h2>Find Your Space</h2></div>
+        <p>13 residential floors with <b>10 two-bedroom apartments per floor</b>, ground-floor shops at the front and back, and secure basement storage units.</p>
+      </div>
+      <div class="floor-picker" aria-label="Select floor"><b>Select floor:</b><button v-for="floor in floorOptions" :key="floor.id" :class="{ active: selectedFloor === floor.id }" @click="selectedFloor = floor.id">{{ floor.label }}</button></div>
+      <div class="availability-body">
+        <div class="inventory-panel">
+          <div class="inventory-title">
+            <div><p class="kicker">{{ currentFloor.name }}</p><h3>{{ selectedFloor === 'B' ? 'Secure Storage Units' : selectedFloor === 'G' ? 'Front & Rear Commercial Shops' : '2-Bedroom Apartments' }}</h3></div>
+            <div class="inventory-actions"><button @click="selectAll">Select all</button><span>|</span><button @click="clearFloor">Clear</button></div>
+          </div>
+          <div class="unit-grid">
+            <button v-for="unit in inventory" :key="unit.code" class="unit-card" :class="{ selected: selectedUnits.includes(unit.code), unavailable: !unit.available }" :disabled="!unit.available" @click="toggleUnit(unit)">
+              <span class="check"><FontAwesomeIcon v-if="selectedUnits.includes(unit.code)" :icon="faCheck" /></span><b>{{ unit.code }}</b><strong>{{ unit.type }}</strong><small>{{ unit.size }}</small><span>{{ unit.detail }}</span><em>{{ unit.available ? 'Available' : 'Reserved' }}</em>
+            </button>
+          </div>
+        </div>
+        <aside class="selection-summary">
+          <p class="kicker">Selection summary</p><h3>{{ selectedUnits.length || 'No' }} {{ selectedUnits.length === 1 ? 'space' : 'spaces' }} selected</h3>
+          <div class="summary-stat"><FontAwesomeIcon :icon="selectedFloor === 'B' ? faWarehouse : selectedFloor === 'G' ? faStore : faBuilding" /><span><small>Currently viewing</small><b>{{ currentFloor.name }}</b></span></div>
+          <div class="summary-stat"><FontAwesomeIcon :icon="faRulerCombined" /><span><small>Configuration</small><b>{{ selectedFloor === 'B' ? 'Secure storage' : selectedFloor === 'G' ? 'Front & rear shops' : '2 bed · 2 bath' }}</b></span></div>
+          <div v-if="selectedUnits.length" class="selected-codes"><small>Selected unit codes</small><div><span v-for="code in selectedUnits" :key="code">{{ code }}</span></div></div>
+          <p v-else class="empty-summary">Choose one or more available spaces to start your enquiry.</p>
+          <a class="gold-btn summary-cta" :class="{ disabled: !selectedUnits.length }" :href="selectedUnits.length ? `mailto:hello@eastleighheights.co.ke?subject=${enquirySubject}` : '#availability'">Express interest ({{ selectedUnits.length }}) <FontAwesomeIcon :icon="faArrowRight" /></a>
+          <a class="plan-link" href="#contact">View architectural floor plan</a>
+        </aside>
+      </div>
     </section>
 
     <section id="amenities" class="amenities">
